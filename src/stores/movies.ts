@@ -3,7 +3,6 @@ import { defineStore } from 'pinia'
 import { z } from 'zod'
 
 type Movie = z.infer<typeof MovieSchema>
-type TMDBResponse = z.infer<typeof TMDBResponseSchema>
 
 const MovieSchema = z.object({
   id: z.number(),
