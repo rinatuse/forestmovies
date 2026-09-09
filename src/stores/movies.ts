@@ -2,7 +2,7 @@ import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import { z } from 'zod'
 
-type Movie = z.infer<typeof MovieSchema>
+export type Movie = z.infer<typeof MovieSchema>
 
 const MovieSchema = z.object({
   id: z.number(),
