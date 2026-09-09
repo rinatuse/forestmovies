@@ -20,6 +20,25 @@ const TMDBResponseSchema = z.object({
   total_results: z.number(),
 })
 
+const GenreSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+})
+
+const MovieDetailSchema = z.object({
+  id: z.number(),
+  title: z.string(),
+  overview: z.string(),
+  poster_path: z.string().nullable(),
+  release_date: z.string(),
+  vote_average: z.number(),
+  runtime: z.number().nullable(),
+  genres: z.array(GenreSchema),
+  tagline: z.string().nullable(),
+})
+
+export type MovieDetail = z.infer<typeof MovieDetailSchema>
+
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY
 const BASE_URL = 'https://api.themoviedb.org/3'
 
@@ -29,6 +48,34 @@ export const useMoviesStore = defineStore('movies', () => {
   const error = ref<string | null>(null)
   const currentPage = ref(1)
   const totalPages = ref(1)
+  const movieDetail = ref<MovieDetail | null>(null)
+
+  async function fetchMovieDetail(id: string) {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await fetch(`${BASE_URL}/movie/${id}?api_key=${API_KEY}`)
+
+      if (!response.ok) {
+        throw new Error(`TMDB ответил с ошибкой: ${response.status}`)
+      }
+
+      const rawData = await response.json()
+      const result = MovieDetailSchema.safeParse(rawData)
+
+      if (!result.success) {
+        throw new Error('TMDB прислал данные неожиданной структуры')
+      }
+
+      movieDetail.value = result.data
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : 'Не удалось загрузить фильм'
+      movieDetail.value = null
+    } finally {
+      loading.value = false
+    }
+  }
 
   async function fetchMovies(query = '', page = 1) {
     loading.value = true
@@ -62,5 +109,14 @@ export const useMoviesStore = defineStore('movies', () => {
     }
   }
 
-  return { movies, loading, error, currentPage, totalPages, fetchMovies }
+  return {
+    movies,
+    loading,
+    error,
+    currentPage,
+    totalPages,
+    movieDetail,
+    fetchMovieDetail,
+    fetchMovies,
+  }
 })

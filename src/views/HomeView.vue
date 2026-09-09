@@ -5,6 +5,7 @@ import { watch, ref, onMounted } from 'vue'
 import SearchBar from '@/components/SearchBar.vue'
 import MovieCard from '@/components/MovieCard.vue'
 import { useDebounceFn } from '@vueuse/core'
+import MovieCardSkeleton from '@/components/MovieCardSkeleton.vue'
 
 const store = useMoviesStore()
 
@@ -28,7 +29,9 @@ onMounted(() => {
 <template>
   <div>
     <SearchBar v-model="searchQuery" />
-    <p v-if="loading">Загрузка...</p>
+    <ul v-if="loading">
+      <MovieCardSkeleton v-for="n in 8" :key="n" />
+    </ul>
     <p v-else-if="error">{{ error }}</p>
     <ul v-else>
       <MovieCard v-for="movie in movies" :key="movie.id" :movie="movie" />
