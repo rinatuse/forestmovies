@@ -2,14 +2,8 @@ import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import { z } from 'zod'
 
-interface TMDBResponse {
-  page: number
-  results: Movie[]
-  total_pages: number
-  total_results: number
-}
-
 type Movie = z.infer<typeof MovieSchema>
+type TMDBResponse = z.infer<typeof TMDBResponseSchema>
 
 const MovieSchema = z.object({
   id: z.number(),
@@ -17,7 +11,14 @@ const MovieSchema = z.object({
   poster_path: z.string().nullable(),
   release_date: z.string(),
   vote_average: z.number(),
-  overview: z.string,
+  overview: z.string(),
+})
+
+const TMDBResponseSchema = z.object({
+  page: z.number(),
+  results: z.array(MovieSchema),
+  total_pages: z.number(),
+  total_results: z.number(),
 })
 
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY
@@ -35,7 +36,7 @@ export const useMoviesStore = defineStore('movies', () => {
     error.value = null
     const endpoint = query
       ? `${BASE_URL}/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(query)}&page=${page}`
-      : `${BASE_URL}/search/movie?api_key=${API_KEY}&page=${page}`
+      : `${BASE_URL}/movie/popular?api_key=${API_KEY}&page=${page}`
 
     try {
       const response = await fetch(endpoint)
@@ -44,7 +45,23 @@ export const useMoviesStore = defineStore('movies', () => {
         throw new Error(`TMDB ответил с ошибкой: ${response.status}`)
       }
 
-      const data: TMDBResponse = await response.json()
-    } catch (err) {}
+      const rawData = await response.json()
+      const result = TMDBResponseSchema.safeParse(rawData)
+
+      if (!result.success) {
+        throw new Error('TMDB прислал данные неожиданной структуры')
+      }
+
+      movies.value = result.data.results
+      currentPage.value = result.data.page
+      totalPages.value = result.data.total_pages
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : 'Не удалось загрузить фильмы'
+      movies.value = []
+    } finally {
+      loading.value = false
+    }
   }
+
+  return { movies, loading, error, currentPage, totalPages, fetchMovies }
 })
