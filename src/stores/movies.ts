@@ -50,12 +50,20 @@ export const useMoviesStore = defineStore('movies', () => {
   const totalPages = ref(1)
   const movieDetail = ref<MovieDetail | null>(null)
 
+  let detailAbortController: AbortController | null = null
+
   async function fetchMovieDetail(id: string) {
+    detailAbortController?.abort()
+    const controller = new AbortController()
+    detailAbortController = controller
+
     loading.value = true
     error.value = null
 
     try {
-      const response = await fetch(`${BASE_URL}/movie/${id}?api_key=${API_KEY}`)
+      const response = await fetch(`${BASE_URL}/movie/${id}?api_key=${API_KEY}`, {
+        signal: controller.signal,
+      })
 
       if (!response.ok) {
         throw new Error(`TMDB ответил с ошибкой: ${response.status}`)
@@ -70,14 +78,25 @@ export const useMoviesStore = defineStore('movies', () => {
 
       movieDetail.value = result.data
     } catch (e) {
+      if (controller.signal.aborted) {
+        return
+      }
       error.value = e instanceof Error ? e.message : 'Не удалось загрузить фильм'
       movieDetail.value = null
     } finally {
-      loading.value = false
+      if (!controller.signal.aborted) {
+        loading.value = false
+      }
     }
   }
 
+  let listAbortController: AbortController | null = null
+
   async function fetchMovies(query = '', page = 1) {
+    listAbortController?.abort()
+    const controller = new AbortController()
+    listAbortController = controller
+
     loading.value = true
     error.value = null
     const endpoint = query
@@ -85,7 +104,9 @@ export const useMoviesStore = defineStore('movies', () => {
       : `${BASE_URL}/movie/popular?api_key=${API_KEY}&page=${page}`
 
     try {
-      const response = await fetch(endpoint)
+      const response = await fetch(endpoint, {
+        signal: controller.signal,
+      })
 
       if (!response.ok) {
         throw new Error(`TMDB ответил с ошибкой: ${response.status}`)
@@ -102,10 +123,15 @@ export const useMoviesStore = defineStore('movies', () => {
       currentPage.value = result.data.page
       totalPages.value = result.data.total_pages
     } catch (e) {
+      if (controller.signal.aborted) {
+        return
+      }
       error.value = e instanceof Error ? e.message : 'Не удалось загрузить фильмы'
       movies.value = []
     } finally {
-      loading.value = false
+      if (!controller.signal.aborted) {
+        loading.value = false
+      }
     }
   }
 
