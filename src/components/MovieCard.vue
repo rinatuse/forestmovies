@@ -12,8 +12,9 @@ defineProps<{
     <n-card>
       <img
         v-if="movie.poster_path"
-        :src="`https://image.tmdb.org/t/p/w342${movie.poster_path}`"
+        :src="`https://image.tmdb.org/t/p/w185${movie.poster_path}`"
         :alt="movie.title"
+        loading="lazy"
       />
       <div v-else class="no-poster">Нет постера</div>
       <h3>{{ movie.title }}</h3>
