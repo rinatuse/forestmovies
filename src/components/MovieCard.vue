@@ -22,3 +22,24 @@ defineProps<{
     </n-card>
   </RouterLink>
 </template>
+
+<style scoped>
+a {
+  min-width: 0;
+}
+
+img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+h3 {
+  min-height: 2.8em;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+</style>

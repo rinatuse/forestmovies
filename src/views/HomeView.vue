@@ -6,7 +6,7 @@ import SearchBar from '@/components/SearchBar.vue'
 import MovieCardSkeleton from '@/components/MovieCardSkeleton.vue'
 import MovieCard from '@/components/MovieCard.vue'
 import { useDebounceFn, useElementSize } from '@vueuse/core'
-import { useVirtualizer } from '@tanstack/vue-virtual'
+import { measureElement, useVirtualizer } from '@tanstack/vue-virtual'
 
 const store = useMoviesStore()
 
@@ -40,6 +40,7 @@ const virtualizerOptions = computed(() => ({
   getScrollElement: () => scrollContainer.value,
   estimateSize: () => 320,
   overscan: 5,
+  measureElement,
 }))
 
 const rowVirtualizer = useVirtualizer(virtualizerOptions)
@@ -50,7 +51,7 @@ watch(virtualItems, (items) => {
   const lastItem = items.at(-1)
   if (!lastItem) return
 
-  if (lastItem.index >= movies.value.length - 5) {
+  if (lastItem.index >= rows.value.length - 1) {
     fetchNextPage()
   }
 })
@@ -61,28 +62,35 @@ onMounted(() => {
 </script>
 
 <template>
-  <div>
+  <div style="display: flex; flex-direction: column; height: 100vh">
     <SearchBar v-model="searchQuery" />
     <ul v-if="loading && movies.length === 0">
       <MovieCardSkeleton v-for="n in 8" :key="n" />
     </ul>
     <p v-else-if="error">{{ error }}</p>
     <template v-else>
-      <div ref="scrollContainer" style="height: 800px; overflow-y: auto; position: relative">
+      <div
+        ref="scrollContainer"
+        style="flex: 1; min-height: 0; overflow-y: auto; position: relative"
+      >
         <div :style="{ height: totalSize + 'px', position: 'relative' }">
           <div
             v-for="virtualItem in virtualItems"
             :key="virtualItem.index"
+            :data-index="virtualItem.index"
+            :ref="(el) => rowVirtualizer.measureElement(el as Element)"
             :style="{
               position: 'absolute',
               top: 0,
               left: 0,
               width: '100%',
-              height: virtualItem.size + 'px',
               transform: `translateY(${virtualItem.start}px)`,
+              display: 'grid',
+              gridTemplateColumns: `repeat(${columnCount}, 1fr)`,
+              gap: '12px',
             }"
           >
-            <MovieCard :movie="movies[virtualItem.index]!" />
+            <MovieCard v-for="movie in rows[virtualItem.index]" :key="movie.id" :movie="movie" />
           </div>
         </div>
       </div>
