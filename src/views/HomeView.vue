@@ -5,7 +5,7 @@ import { watch, ref, onMounted, computed } from 'vue'
 import SearchBar from '@/components/SearchBar.vue'
 import MovieCardSkeleton from '@/components/MovieCardSkeleton.vue'
 import MovieCard from '@/components/MovieCard.vue'
-import { useDebounceFn } from '@vueuse/core'
+import { useDebounceFn, useElementSize } from '@vueuse/core'
 import { useVirtualizer } from '@tanstack/vue-virtual'
 
 const store = useMoviesStore()
@@ -23,9 +23,20 @@ watch(searchQuery, (newQuery) => {
 })
 
 const scrollContainer = ref<HTMLElement | null>(null)
+const { width: containerWidth } = useElementSize(scrollContainer)
+const CARD_WIDTH = 220
+const columnCount = computed(() => Math.max(1, Math.floor(containerWidth.value / CARD_WIDTH)))
+
+const rows = computed(() => {
+  const result: (typeof movies.value)[] = []
+  for (let i = 0; i < movies.value.length; i += columnCount.value) {
+    result.push(movies.value.slice(i, i + columnCount.value))
+  }
+  return result
+})
 
 const virtualizerOptions = computed(() => ({
-  count: movies.value.length,
+  count: rows.value.length,
   getScrollElement: () => scrollContainer.value,
   estimateSize: () => 320,
   overscan: 5,
