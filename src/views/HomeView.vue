@@ -11,7 +11,7 @@ import { useVirtualizer } from '@tanstack/vue-virtual'
 const store = useMoviesStore()
 
 const { movies, loading, error } = storeToRefs(store)
-const { fetchMovies } = store
+const { fetchMovies, fetchNextPage } = store
 
 const searchQuery = ref('')
 const debouncedFetchMovies = useDebounceFn((query: string) => {
@@ -34,6 +34,15 @@ const virtualizerOptions = computed(() => ({
 const rowVirtualizer = useVirtualizer(virtualizerOptions)
 const virtualItems = computed(() => rowVirtualizer.value.getVirtualItems())
 const totalSize = computed(() => rowVirtualizer.value.getTotalSize())
+
+watch(virtualItems, (items) => {
+  const lastItem = items.at(-1)
+  if (!lastItem) return
+
+  if (lastItem.index >= movies.value.length - 5) {
+    fetchNextPage()
+  }
+})
 
 onMounted(() => {
   fetchMovies()

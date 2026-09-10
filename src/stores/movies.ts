@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { z } from 'zod'
 
@@ -49,6 +49,8 @@ export const useMoviesStore = defineStore('movies', () => {
   const currentPage = ref(1)
   const totalPages = ref(1)
   const movieDetail = ref<MovieDetail | null>(null)
+  const currentQuery = ref('')
+  const hasMore = computed(() => currentPage.value < totalPages.value)
 
   let detailAbortController: AbortController | null = null
 
@@ -92,6 +94,52 @@ export const useMoviesStore = defineStore('movies', () => {
 
   let listAbortController: AbortController | null = null
 
+  async function fetchNextPage() {
+    if (!hasMore.value || loading.value) return
+
+    listAbortController?.abort()
+    const controller = new AbortController()
+    listAbortController = controller
+
+    loading.value = true
+    error.value = null
+
+    const nextPage = currentPage.value + 1
+    const endpoint = currentQuery.value
+      ? `${BASE_URL}/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(currentQuery.value)}&page=${nextPage}`
+      : `${BASE_URL}/movie/popular?api_key=${API_KEY}&page=${nextPage}`
+
+    try {
+      const response = await fetch(endpoint, {
+        signal: controller.signal,
+      })
+
+      if (!response.ok) {
+        throw new Error(`TMDB ответил с ошибкой: ${response.status}`)
+      }
+
+      const rawData = await response.json()
+      const result = TMDBResponseSchema.safeParse(rawData)
+
+      if (!result.success) {
+        throw new Error('TMDB прислал данные неожиданной структуры')
+      }
+
+      movies.value.push(...result.data.results)
+      currentPage.value = result.data.page
+      totalPages.value = result.data.total_pages
+    } catch (e) {
+      if (controller.signal.aborted) {
+        return
+      }
+      error.value = e instanceof Error ? e.message : 'Не удалось загрузить фильмы'
+    } finally {
+      if (!controller.signal.aborted) {
+        loading.value = false
+      }
+    }
+  }
+
   async function fetchMovies(query = '', page = 1) {
     listAbortController?.abort()
     const controller = new AbortController()
@@ -99,6 +147,7 @@ export const useMoviesStore = defineStore('movies', () => {
 
     loading.value = true
     error.value = null
+
     const endpoint = query
       ? `${BASE_URL}/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(query)}&page=${page}`
       : `${BASE_URL}/movie/popular?api_key=${API_KEY}&page=${page}`
@@ -122,6 +171,7 @@ export const useMoviesStore = defineStore('movies', () => {
       movies.value = result.data.results
       currentPage.value = result.data.page
       totalPages.value = result.data.total_pages
+      currentQuery.value = query
     } catch (e) {
       if (controller.signal.aborted) {
         return
@@ -142,7 +192,9 @@ export const useMoviesStore = defineStore('movies', () => {
     currentPage,
     totalPages,
     movieDetail,
+    hasMore,
     fetchMovieDetail,
     fetchMovies,
+    fetchNextPage,
   }
 })
