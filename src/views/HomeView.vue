@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import { useMoviesStore } from '@/stores/movies'
-import { watch, ref, onMounted } from 'vue'
+import { watch, ref, onMounted, computed } from 'vue'
 import SearchBar from '@/components/SearchBar.vue'
+import MovieCardSkeleton from '@/components/MovieCardSkeleton.vue'
 import MovieCard from '@/components/MovieCard.vue'
 import { useDebounceFn } from '@vueuse/core'
-import MovieCardSkeleton from '@/components/MovieCardSkeleton.vue'
+import { useVirtualizer } from '@tanstack/vue-virtual'
 
 const store = useMoviesStore()
 
@@ -21,6 +22,19 @@ watch(searchQuery, (newQuery) => {
   debouncedFetchMovies(newQuery)
 })
 
+const scrollContainer = ref<HTMLElement | null>(null)
+
+const virtualizerOptions = computed(() => ({
+  count: movies.value.length,
+  getScrollElement: () => scrollContainer.value,
+  estimateSize: () => 320,
+  overscan: 5,
+}))
+
+const rowVirtualizer = useVirtualizer(virtualizerOptions)
+const virtualItems = computed(() => rowVirtualizer.value.getVirtualItems())
+const totalSize = computed(() => rowVirtualizer.value.getTotalSize())
+
 onMounted(() => {
   fetchMovies()
 })
@@ -29,13 +43,30 @@ onMounted(() => {
 <template>
   <div>
     <SearchBar v-model="searchQuery" />
-    <ul v-if="loading">
+    <ul v-if="loading && movies.length === 0">
       <MovieCardSkeleton v-for="n in 8" :key="n" />
     </ul>
     <p v-else-if="error">{{ error }}</p>
-    <ul v-else>
-      <MovieCard v-for="movie in movies" :key="movie.id" :movie="movie" />
-    </ul>
+    <template v-else>
+      <div ref="scrollContainer" style="height: 800px; overflow-y: auto; position: relative">
+        <div :style="{ height: totalSize + 'px', position: 'relative' }">
+          <div
+            v-for="virtualItem in virtualItems"
+            :key="virtualItem.index"
+            :style="{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: virtualItem.size + 'px',
+              transform: `translateY(${virtualItem.start}px)`,
+            }"
+          >
+            <MovieCard :movie="movies[virtualItem.index]!" />
+          </div>
+        </div>
+      </div>
+    </template>
   </div>
 </template>
 

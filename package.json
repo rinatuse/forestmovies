@@ -17,6 +17,7 @@
     "format": "prettier --write --experimental-cli src/"
   },
   "dependencies": {
+    "@tanstack/vue-virtual": "^3.13.37",
     "@vueuse/core": "^14.4.0",
     "naive-ui": "^2.45.3",
     "pinia": "^4.0.2",
