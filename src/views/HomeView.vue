@@ -5,8 +5,10 @@ import { watch, ref, onMounted, computed } from 'vue'
 import SearchBar from '@/components/SearchBar.vue'
 import MovieCardSkeleton from '@/components/MovieCardSkeleton.vue'
 import MovieCard from '@/components/MovieCard.vue'
-import { useDebounceFn, useElementSize } from '@vueuse/core'
+import { useDebounceFn, useElementSize, useScroll } from '@vueuse/core'
 import { measureElement, useVirtualizer } from '@tanstack/vue-virtual'
+import { NIcon } from 'naive-ui'
+import { ChevronUpOutline } from '@vicons/ionicons5'
 
 const store = useMoviesStore()
 
@@ -23,6 +25,8 @@ watch(searchQuery, (newQuery) => {
 })
 
 const scrollContainer = ref<HTMLElement | null>(null)
+const { y: scrollY } = useScroll(scrollContainer)
+const showScrollTop = computed(() => scrollY.value > 800)
 const gridWrapper = ref<HTMLElement | null>(null)
 const measureRef = ref<HTMLElement | null>(null)
 const { width: containerWidth } = useElementSize(measureRef)
@@ -46,6 +50,10 @@ const virtualizerOptions = computed(() => ({
   overscan: 5,
   measureElement,
 }))
+
+function scrollToTop() {
+  scrollContainer.value?.scrollTo({ top: 0, behavior: 'smooth' })
+}
 
 const rowVirtualizer = useVirtualizer(virtualizerOptions)
 const virtualItems = computed(() => rowVirtualizer.value.getVirtualItems())
@@ -132,6 +140,9 @@ onMounted(() => {
       </div>
     </template>
   </div>
+  <button v-if="showScrollTop" class="scroll-top-btn" @click="scrollToTop" aria-label="Наверх">
+    <n-icon :component="ChevronUpOutline" size="24" />
+  </button>
 </template>
 
 <style scoped>
@@ -277,5 +288,27 @@ onMounted(() => {
   margin: 0 auto;
   padding: 0 24px;
   box-sizing: border-box;
+}
+
+.scroll-top-btn {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-accent);
+  color: var(--color-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  transition: transform 0.15s ease;
+}
+
+.scroll-top-btn:hover {
+  transform: translateY(-3px);
 }
 </style>
