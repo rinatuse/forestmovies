@@ -3,8 +3,13 @@ import { NCard, NSkeleton } from 'naive-ui'
 </script>
 
 <template>
-  <n-card>
-    <n-skeleton height="100px" />
-    <n-skeleton text :repeat="2" style="margin-top: 12px" />
+  <n-card :bordered="false">
+    <n-skeleton
+      height="0"
+      :sharp="false"
+      style="aspect-ratio: 2 / 3; margin: -20px -24px 12px; width: calc(100% + 48px)"
+    />
+    <n-skeleton text style="width: 80%" />
+    <n-skeleton text style="width: 40%; margin-top: 8px" />
   </n-card>
 </template>

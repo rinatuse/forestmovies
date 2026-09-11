@@ -26,6 +26,7 @@ defineEmits<{
 
 <style scoped>
 :deep(.n-input) {
+  width: 100%;
   transition: box-shadow 0.2s ease;
 }
 
