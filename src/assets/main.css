@@ -1,0 +1,16 @@
+:root {
+  --color-bg: #151217;
+  --color-surface: #1f1b22;
+  --color-accent: #f2a93b;
+  --color-text: #edeae5;
+  --color-text-muted: #8c8790;
+
+  --font-display: 'Oswald', sans-serif;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: system-ui, sans-serif;
+}

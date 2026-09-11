@@ -1,7 +1,20 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { darkTheme } from 'naive-ui'
+import type { GlobalThemeOverrides } from 'naive-ui'
+
+const themeOverrides: GlobalThemeOverrides = {
+  common: {
+    primaryColor: '#F2A93B',
+    primaryColorHover: '#F5BB5E',
+    primaryColorPressed: '#D6922A',
+  },
+}
+</script>
 
 <template>
-  <RouterView />
+  <n-config-rovider :theme="darkTheme" :theme-overrides="themeOverrides">
+    <RouterView />
+  </n-config-rovider>
 </template>
 
 <style scoped></style>
