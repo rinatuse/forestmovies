@@ -12,9 +12,9 @@ const themeOverrides: GlobalThemeOverrides = {
 </script>
 
 <template>
-  <n-config-rovider :theme="darkTheme" :theme-overrides="themeOverrides">
+  <n-config-provider :theme="darkTheme" :theme-overrides="themeOverrides">
     <RouterView />
-  </n-config-rovider>
+  </n-config-provider>
 </template>
 
 <style scoped></style>

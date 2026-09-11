@@ -63,6 +63,9 @@ onMounted(() => {
 
 <template>
   <div style="display: flex; flex-direction: column; height: 100vh">
+    <header class="marquee">
+      <h1>Forest<span>Movies</span></h1>
+    </header>
     <SearchBar v-model="searchQuery" />
     <ul v-if="loading && movies.length === 0">
       <MovieCardSkeleton v-for="n in 8" :key="n" />
@@ -99,4 +102,22 @@ onMounted(() => {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.marquee {
+  padding: 24px 24px 16px;
+  text-align: center;
+}
+
+.marquee h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: uppercase;
+  color: var(--color-text);
+}
+
+.marquee span {
+  color: var(--color-accent);
+}
+</style>
