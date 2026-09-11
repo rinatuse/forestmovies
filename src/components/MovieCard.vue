@@ -9,7 +9,7 @@ defineProps<{
 
 <template>
   <RouterLink :to="{ name: 'movie-detail', params: { id: movie.id } }">
-    <n-card>
+    <n-card :bordered="false">
       <img
         v-if="movie.poster_path"
         :src="`https://image.tmdb.org/t/p/w185${movie.poster_path}`"
@@ -46,6 +46,7 @@ a:hover img {
 
 :deep(.n-card) {
   height: 100%;
+  background-color: var(--color-surface);
 }
 
 img {

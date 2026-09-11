@@ -74,7 +74,8 @@ onMounted(() => {
     <template v-else>
       <div
         ref="scrollContainer"
-        style="flex: 1; min-height: 0; overflow-y: auto; position: relative"
+        class="scroll-container"
+        style="flex: 1; min-height: 0; overflow-y: auto; position: relative; padding: 0 24px"
       >
         <div :style="{ height: totalSize + 'px', position: 'relative' }">
           <div
@@ -86,12 +87,15 @@ onMounted(() => {
               position: 'absolute',
               top: 0,
               left: 0,
-              width: '100%',
+              right: 0,
               transform: `translateY(${virtualItem.start}px)`,
               display: 'grid',
               gridTemplateColumns: `repeat(${columnCount}, 1fr)`,
               gap: '12px',
               paddingBottom: '12px',
+              paddingLeft: '24px',
+              paddingRight: '24px',
+              boxSizing: 'border-box',
             }"
           >
             <MovieCard v-for="movie in rows[virtualItem.index]" :key="movie.id" :movie="movie" />
@@ -119,5 +123,24 @@ onMounted(() => {
 
 .marquee span {
   color: var(--color-accent);
+}
+
+.scroll-container {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-accent) var(--color-surface);
+}
+
+.scroll-container::-webkit-scrollbar {
+  width: 10px;
+}
+
+.scroll-container::-webkit-scrollbar-track {
+  background: var(--color-surface);
+}
+
+.scroll-container::-webkit-scrollbar-thumb {
+  background-color: var(--color-accent);
+  border-radius: 6px;
+  border: 2px solid var(--color-surface);
 }
 </style>
