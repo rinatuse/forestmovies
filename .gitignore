@@ -24,7 +24,7 @@ coverage
 *.njsproj
 *.sln
 *.sw?
-
+server/.env
 *.tsbuildinfo
 
 .eslintcache
