@@ -3,6 +3,7 @@ import { defineStore } from 'pinia'
 import { z } from 'zod'
 
 export type Movie = z.infer<typeof MovieSchema>
+export type Genre = z.infer<typeof GenreSchema>
 
 const MovieSchema = z.object({
   id: z.number(),
@@ -52,6 +53,8 @@ export const useMoviesStore = defineStore('movies', () => {
   const movieDetail = ref<MovieDetail | null>(null)
   const currentQuery = ref('')
   const hasMore = computed(() => currentPage.value < totalPages.value)
+  const genres = ref<Genre[]>([])
+  const currentGenreId = ref<number | null>(null)
 
   let detailAbortController: AbortController | null = null
 
@@ -111,7 +114,9 @@ export const useMoviesStore = defineStore('movies', () => {
     const nextPage = currentPage.value + 1
     const endpoint = currentQuery.value
       ? `${BASE_URL}/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(currentQuery.value)}&page=${nextPage}&language=${userLanguage}`
-      : `${BASE_URL}/movie/popular?api_key=${API_KEY}&page=${nextPage}&language=${userLanguage}`
+      : currentGenreId.value
+        ? `${BASE_URL}/discover/movie?api_key=${API_KEY}&with_genres=${currentGenreId.value}&page=${nextPage}&language=${userLanguage}`
+        : `${BASE_URL}/movie/popular?api_key=${API_KEY}&page=${nextPage}&language=${userLanguage}`
 
     try {
       const response = await fetch(endpoint, {
@@ -144,7 +149,30 @@ export const useMoviesStore = defineStore('movies', () => {
     }
   }
 
-  async function fetchMovies(query = '', page = 1) {
+  async function fetchGenres() {
+    try {
+      const response = await fetch(
+        `${BASE_URL}/genre/movie/list?api_key=${API_KEY}&language=${userLanguage}`,
+      )
+
+      if (!response.ok) {
+        throw new Error(`TMDB ответил с ошибкой: ${response.status}`)
+      }
+
+      const rawData = await response.json()
+      const result = z.object({ genres: z.array(GenreSchema) }).safeParse(rawData)
+
+      if (!result.success) {
+        throw new Error('TMDB прислал данные неожиданной структуры')
+      }
+
+      genres.value = result.data.genres
+    } catch {
+      genres.value = []
+    }
+  }
+
+  async function fetchMovies(query = '', page = 1, genreId: number | null = null) {
     listAbortController?.abort()
     const controller = new AbortController()
     listAbortController = controller
@@ -154,7 +182,9 @@ export const useMoviesStore = defineStore('movies', () => {
 
     const endpoint = query
       ? `${BASE_URL}/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(query)}&page=${page}&language=${userLanguage}`
-      : `${BASE_URL}/movie/popular?api_key=${API_KEY}&page=${page}&language=${userLanguage}`
+      : genreId
+        ? `${BASE_URL}/discover/movie?api_key=${API_KEY}&with_genres=${genreId}&page=${page}&language=${userLanguage}`
+        : `${BASE_URL}/movie/popular?api_key=${API_KEY}&page=${page}&language=${userLanguage}`
 
     try {
       const response = await fetch(endpoint, {
@@ -176,6 +206,7 @@ export const useMoviesStore = defineStore('movies', () => {
       currentPage.value = result.data.page
       totalPages.value = result.data.total_pages
       currentQuery.value = query
+      currentGenreId.value = genreId
     } catch (e) {
       if (controller.signal.aborted) {
         return
@@ -197,8 +228,10 @@ export const useMoviesStore = defineStore('movies', () => {
     totalPages,
     movieDetail,
     hasMore,
+    genres,
     fetchMovieDetail,
     fetchMovies,
     fetchNextPage,
+    fetchGenres,
   }
 })

@@ -12,8 +12,8 @@ import { ChevronUpOutline } from '@vicons/ionicons5'
 
 const store = useMoviesStore()
 
-const { movies, loading, error } = storeToRefs(store)
-const { fetchMovies, fetchNextPage } = store
+const { movies, loading, error, genres } = storeToRefs(store)
+const { fetchMovies, fetchNextPage, fetchGenres } = store
 
 const searchQuery = ref('')
 const debouncedFetchMovies = useDebounceFn((query: string) => {
@@ -21,6 +21,7 @@ const debouncedFetchMovies = useDebounceFn((query: string) => {
 }, 400)
 
 watch(searchQuery, (newQuery) => {
+  selectedGenreId.value = null
   debouncedFetchMovies(newQuery)
 })
 
@@ -30,6 +31,8 @@ const showScrollTop = computed(() => scrollY.value > 800)
 const gridWrapper = ref<HTMLElement | null>(null)
 const measureRef = ref<HTMLElement | null>(null)
 const { width: containerWidth } = useElementSize(measureRef)
+const selectedGenreId = ref<number | null>(null)
+
 const CARD_WIDTH = 220
 const columnCount = computed(() =>
   Math.min(8, Math.max(1, Math.floor(containerWidth.value / CARD_WIDTH))),
@@ -51,6 +54,16 @@ const virtualizerOptions = computed(() => ({
   measureElement,
 }))
 
+function selectGenre(genreId: number) {
+  if (selectedGenreId.value === genreId) {
+    selectedGenreId.value = null
+  } else {
+    selectedGenreId.value = genreId
+  }
+  searchQuery.value = ''
+  fetchMovies('', 1, selectedGenreId.value)
+}
+
 function scrollToTop() {
   scrollContainer.value?.scrollTo({ top: 0, behavior: 'smooth' })
 }
@@ -70,6 +83,7 @@ watch(virtualItems, (items) => {
 
 onMounted(() => {
   fetchMovies()
+  fetchGenres()
 })
 </script>
 
@@ -80,6 +94,17 @@ onMounted(() => {
     </header>
     <div class="search-wrapper">
       <SearchBar v-model="searchQuery" />
+      <div v-if="genres.length" class="genre-chips">
+        <button
+          v-for="genre in genres"
+          :key="genre.id"
+          class="genre-chip"
+          :class="{ 'genre-chip--active': selectedGenreId === genre.id }"
+          @click="selectGenre(genre.id)"
+        >
+          {{ genre.name }}
+        </button>
+      </div>
     </div>
     <div ref="measureRef" class="measure-line"></div>
     <ul
@@ -92,7 +117,9 @@ onMounted(() => {
     <div v-else-if="error" class="error-state">
       <p class="error-title">Сеанс не состоится</p>
       <p class="error-subtitle">{{ error }}</p>
-      <button class="error-retry" @click="fetchMovies(searchQuery)">Попробовать снова</button>
+      <button class="error-retry" @click="fetchMovies(searchQuery, 1, selectedGenreId)">
+        Попробовать снова
+      </button>
     </div>
     <div v-else-if="movies.length === 0 && searchQuery" class="empty-state">
       <p class="empty-title">В прокате такого нет</p>
@@ -136,6 +163,10 @@ onMounted(() => {
           >
             <MovieCard v-for="movie in rows[virtualItem.index]" :key="movie.id" :movie="movie" />
           </div>
+        </div>
+        <div v-if="loading && movies.length > 0" class="loading-more">
+          <span class="spinner"></span>
+          Загружаем ещё...
         </div>
       </div>
     </template>
@@ -310,5 +341,70 @@ onMounted(() => {
 
 .scroll-top-btn:hover {
   transform: translateY(-3px);
+}
+
+.genre-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.genre-chip {
+  padding: 6px 16px;
+  background: transparent;
+  border: 1px solid var(--color-text-muted);
+  border-radius: 20px;
+  color: var(--color-text-muted);
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.genre-chip:hover {
+  border-color: var(--color-accent);
+  color: var(--color-text);
+}
+
+.genre-chip--active {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-bg);
+}
+
+.loading-more {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--color-text-muted);
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--color-text-muted);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>
