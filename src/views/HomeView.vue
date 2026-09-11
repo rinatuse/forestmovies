@@ -9,6 +9,7 @@ import { useDebounceFn, useElementSize, useScroll } from '@vueuse/core'
 import { measureElement, useVirtualizer } from '@tanstack/vue-virtual'
 import { NIcon } from 'naive-ui'
 import { ChevronUpOutline } from '@vicons/ionicons5'
+import { useRoute } from 'vue-router'
 
 const store = useMoviesStore()
 
@@ -32,6 +33,7 @@ const gridWrapper = ref<HTMLElement | null>(null)
 const measureRef = ref<HTMLElement | null>(null)
 const { width: containerWidth } = useElementSize(measureRef)
 const selectedGenreId = ref<number | null>(null)
+const route = useRoute()
 
 const CARD_WIDTH = 220
 const columnCount = computed(() =>
@@ -82,7 +84,11 @@ watch(virtualItems, (items) => {
 })
 
 onMounted(() => {
-  fetchMovies()
+  const genreFromUrl = route.query.genre ? Number(route.query.genre) : null
+  if (genreFromUrl) {
+    selectedGenreId.value = genreFromUrl
+  }
+  fetchMovies('', 1, genreFromUrl)
   fetchGenres()
 })
 </script>
