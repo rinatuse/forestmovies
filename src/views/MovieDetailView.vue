@@ -3,6 +3,8 @@ import { watch, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useMoviesStore } from '@/stores/movies'
+import { NIcon } from 'naive-ui'
+import { FilmOutline } from '@vicons/ionicons5'
 
 const route = useRoute()
 const store = useMoviesStore()
@@ -105,6 +107,9 @@ onUnmounted(() => {
                     :alt="movie.title"
                     loading="lazy"
                   />
+                  <div v-else class="similar-no-poster">
+                    <n-icon :component="FilmOutline" size="28" />
+                  </div>
                 </div>
                 <span class="similar-card-title">{{ movie.title }}</span>
               </RouterLink>
@@ -385,23 +390,29 @@ onUnmounted(() => {
   color: inherit;
   text-decoration: none;
   display: block;
+  min-width: 0;
 }
 
 .similar-card-poster {
   width: 100%;
   aspect-ratio: 2 / 3;
   background: var(--color-surface);
-  border-radius: 4px;
   overflow: hidden;
-  margin-bottom: 8px;
 }
 
 .similar-card-poster img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display: block;
-  transition: transform 0.3s ease;
+}
+
+.similar-no-poster {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
 }
 
 .similar-card:hover img {
