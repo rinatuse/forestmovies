@@ -26,12 +26,19 @@ defineProps<{
 <style scoped>
 a {
   min-width: 0;
+  height: 100%;
+}
+
+:deep(.n-card) {
+  height: 100%;
 }
 
 img {
   width: 100%;
+  aspect-ratio: 2 / 3;
   height: auto;
   display: block;
+  object-fit: cover;
 }
 
 h3 {

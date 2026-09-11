@@ -88,6 +88,7 @@ onMounted(() => {
               display: 'grid',
               gridTemplateColumns: `repeat(${columnCount}, 1fr)`,
               gap: '12px',
+              paddingBottom: '12px',
             }"
           >
             <MovieCard v-for="movie in rows[virtualItem.index]" :key="movie.id" :movie="movie" />

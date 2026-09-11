@@ -41,6 +41,7 @@ export type MovieDetail = z.infer<typeof MovieDetailSchema>
 
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY
 const BASE_URL = 'https://api.themoviedb.org/3'
+const userLanguage = navigator.language
 
 export const useMoviesStore = defineStore('movies', () => {
   const movies = ref<Movie[]>([])
@@ -63,9 +64,12 @@ export const useMoviesStore = defineStore('movies', () => {
     error.value = null
 
     try {
-      const response = await fetch(`${BASE_URL}/movie/${id}?api_key=${API_KEY}`, {
-        signal: controller.signal,
-      })
+      const response = await fetch(
+        `${BASE_URL}/movie/${id}?api_key=${API_KEY}&language=${userLanguage}`,
+        {
+          signal: controller.signal,
+        },
+      )
 
       if (!response.ok) {
         throw new Error(`TMDB ответил с ошибкой: ${response.status}`)
@@ -106,8 +110,8 @@ export const useMoviesStore = defineStore('movies', () => {
 
     const nextPage = currentPage.value + 1
     const endpoint = currentQuery.value
-      ? `${BASE_URL}/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(currentQuery.value)}&page=${nextPage}`
-      : `${BASE_URL}/movie/popular?api_key=${API_KEY}&page=${nextPage}`
+      ? `${BASE_URL}/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(currentQuery.value)}&page=${nextPage}&language=${userLanguage}`
+      : `${BASE_URL}/movie/popular?api_key=${API_KEY}&page=${nextPage}&language=${userLanguage}`
 
     try {
       const response = await fetch(endpoint, {
@@ -149,8 +153,8 @@ export const useMoviesStore = defineStore('movies', () => {
     error.value = null
 
     const endpoint = query
-      ? `${BASE_URL}/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(query)}&page=${page}`
-      : `${BASE_URL}/movie/popular?api_key=${API_KEY}&page=${page}`
+      ? `${BASE_URL}/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(query)}&page=${page}&language=${userLanguage}`
+      : `${BASE_URL}/movie/popular?api_key=${API_KEY}&page=${page}&language=${userLanguage}`
 
     try {
       const response = await fetch(endpoint, {
