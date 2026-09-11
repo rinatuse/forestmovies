@@ -41,8 +41,7 @@ const MovieDetailSchema = z.object({
 
 export type MovieDetail = z.infer<typeof MovieDetailSchema>
 
-const API_KEY = import.meta.env.VITE_TMDB_API_KEY
-const BASE_URL = 'https://api.themoviedb.org/3'
+const BASE_URL = '/api'
 const userLanguage = navigator.language
 
 export const useMoviesStore = defineStore('movies', () => {
@@ -70,10 +69,9 @@ export const useMoviesStore = defineStore('movies', () => {
     similarMovies.value = []
 
     try {
-      const response = await fetch(
-        `${BASE_URL}/movie/${id}/similar?api_key=${API_KEY}&language=${userLanguage}`,
-        { signal: controller.signal },
-      )
+      const response = await fetch(`${BASE_URL}/movie/${id}/similar?language=${userLanguage}`, {
+        signal: controller.signal,
+      })
 
       if (!response.ok) {
         throw new Error(`TMDB ответил с ошибкой: ${response.status}`)
@@ -110,12 +108,9 @@ export const useMoviesStore = defineStore('movies', () => {
     error.value = null
 
     try {
-      const response = await fetch(
-        `${BASE_URL}/movie/${id}?api_key=${API_KEY}&language=${userLanguage}`,
-        {
-          signal: controller.signal,
-        },
-      )
+      const response = await fetch(`${BASE_URL}/movie/${id}?language=${userLanguage}`, {
+        signal: controller.signal,
+      })
 
       if (!response.ok) {
         throw new Error(`TMDB ответил с ошибкой: ${response.status}`)
@@ -156,10 +151,10 @@ export const useMoviesStore = defineStore('movies', () => {
 
     const nextPage = currentPage.value + 1
     const endpoint = currentQuery.value
-      ? `${BASE_URL}/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(currentQuery.value)}&page=${nextPage}&language=${userLanguage}`
+      ? `${BASE_URL}/search/movie?query=${encodeURIComponent(currentQuery.value)}&page=${nextPage}&language=${userLanguage}`
       : currentGenreId.value
-        ? `${BASE_URL}/discover/movie?api_key=${API_KEY}&with_genres=${currentGenreId.value}&page=${nextPage}&language=${userLanguage}`
-        : `${BASE_URL}/movie/popular?api_key=${API_KEY}&page=${nextPage}&language=${userLanguage}`
+        ? `${BASE_URL}/discover/movie?with_genres=${currentGenreId.value}&page=${nextPage}&language=${userLanguage}`
+        : `${BASE_URL}/movie/popular?page=${nextPage}&language=${userLanguage}`
 
     try {
       const response = await fetch(endpoint, {
@@ -194,9 +189,7 @@ export const useMoviesStore = defineStore('movies', () => {
 
   async function fetchGenres() {
     try {
-      const response = await fetch(
-        `${BASE_URL}/genre/movie/list?api_key=${API_KEY}&language=${userLanguage}`,
-      )
+      const response = await fetch(`${BASE_URL}/genre/movie/list?language=${userLanguage}`)
 
       if (!response.ok) {
         throw new Error(`TMDB ответил с ошибкой: ${response.status}`)
@@ -224,10 +217,10 @@ export const useMoviesStore = defineStore('movies', () => {
     error.value = null
 
     const endpoint = query
-      ? `${BASE_URL}/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(query)}&page=${page}&language=${userLanguage}`
+      ? `${BASE_URL}/search/movie?query=${encodeURIComponent(query)}&page=${page}&language=${userLanguage}`
       : genreId
-        ? `${BASE_URL}/discover/movie?api_key=${API_KEY}&with_genres=${genreId}&page=${page}&language=${userLanguage}`
-        : `${BASE_URL}/movie/popular?api_key=${API_KEY}&page=${page}&language=${userLanguage}`
+        ? `${BASE_URL}/discover/movie?with_genres=${genreId}&page=${page}&language=${userLanguage}`
+        : `${BASE_URL}/movie/popular?page=${page}&language=${userLanguage}`
 
     try {
       const response = await fetch(endpoint, {
