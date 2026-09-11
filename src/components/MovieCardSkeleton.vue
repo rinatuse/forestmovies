@@ -5,7 +5,6 @@ import { NCard, NSkeleton } from 'naive-ui'
 <template>
   <n-card :bordered="false">
     <n-skeleton
-      height="0"
       :sharp="false"
       style="aspect-ratio: 2 / 3; margin: -20px -24px 12px; width: calc(100% + 48px)"
     />

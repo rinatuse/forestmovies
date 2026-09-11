@@ -60,7 +60,8 @@ img {
 }
 
 h3 {
-  min-height: 2.8em;
+  height: 2.8em;
+  line-height: 1.4em;
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;

@@ -24,7 +24,8 @@ watch(searchQuery, (newQuery) => {
 
 const scrollContainer = ref<HTMLElement | null>(null)
 const gridWrapper = ref<HTMLElement | null>(null)
-const { width: containerWidth } = useElementSize(gridWrapper)
+const measureRef = ref<HTMLElement | null>(null)
+const { width: containerWidth } = useElementSize(measureRef)
 const CARD_WIDTH = 220
 const columnCount = computed(() =>
   Math.min(8, Math.max(1, Math.floor(containerWidth.value / CARD_WIDTH))),
@@ -72,6 +73,7 @@ onMounted(() => {
     <div class="search-wrapper">
       <SearchBar v-model="searchQuery" />
     </div>
+    <div ref="measureRef" class="measure-line"></div>
     <ul
       v-if="loading && movies.length === 0"
       class="skeleton-grid"
@@ -265,5 +267,15 @@ onMounted(() => {
 
 .error-retry:hover {
   background-color: #f5bb5e;
+}
+
+.measure-line {
+  height: 0;
+  overflow: hidden;
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0 24px;
+  box-sizing: border-box;
 }
 </style>
