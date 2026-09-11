@@ -6,13 +6,14 @@ import { useMoviesStore } from '@/stores/movies'
 
 const route = useRoute()
 const store = useMoviesStore()
-const { movieDetail, loading, error } = storeToRefs(store)
-const { fetchMovieDetail } = store
+const { movieDetail, loading, error, similarMovies } = storeToRefs(store)
+const { fetchMovieDetail, fetchSimilarMovies } = store
 
 watch(
   () => route.params.id,
   (newId) => {
     fetchMovieDetail(newId as string)
+    fetchSimilarMovies(newId as string)
   },
   { immediate: true },
 )
@@ -30,56 +31,128 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="detail-page">
-    <RouterLink to="/" class="back-link">← Все фильмы</RouterLink>
+  <div class="page-wrapper">
+    <div
+      v-if="movieDetail?.backdrop_path"
+      class="backdrop"
+      :style="{
+        backgroundImage: `linear-gradient(to bottom, rgba(21, 18, 23, 0.2), var(--color-bg)), url(https://image.tmdb.org/t/p/w1280${movieDetail.backdrop_path})`,
+      }"
+    ></div>
 
-    <div v-if="loading" class="detail-loading">
-      <span class="spinner"></span>
-    </div>
-    <div v-else-if="error" class="error-state">
-      <p class="error-title">Сеанс не состоится</p>
-      <p class="error-subtitle">{{ error }}</p>
-      <RouterLink to="/" class="error-retry">Вернуться к афише</RouterLink>
-    </div>
-    <div v-else-if="movieDetail" class="detail-content">
-      <div class="detail-poster">
-        <img
-          v-if="movieDetail.poster_path"
-          :src="`https://image.tmdb.org/t/p/w500${movieDetail.poster_path}`"
-          :alt="movieDetail.title"
-        />
-      </div>
-      <div class="detail-info">
-        <h1>{{ movieDetail.title }}</h1>
-        <p v-if="movieDetail.tagline" class="tagline">{{ movieDetail.tagline }}</p>
+    <div class="scroll-area">
+      <div class="detail-page">
+        <RouterLink to="/" class="back-link">← Все фильмы</RouterLink>
 
-        <div class="detail-meta">
-          <span class="detail-date">{{ movieDetail.release_date }}</span>
-          <span v-if="movieDetail.runtime" class="detail-runtime"
-            >{{ movieDetail.runtime }} мин</span
-          >
-          <span class="detail-rating">{{ movieDetail.vote_average.toFixed(1) }}</span>
+        <div v-if="loading" class="detail-loading">
+          <span class="spinner"></span>
         </div>
-
-        <div v-if="movieDetail.genres.length" class="detail-genres">
-          <RouterLink
-            v-for="genre in movieDetail.genres"
-            :key="genre.id"
-            :to="{ path: '/', query: { genre: genre.id } }"
-            class="genre-badge"
-          >
-            {{ genre.name }}
-          </RouterLink>
+        <div v-else-if="error" class="error-state">
+          <p class="error-title">Сеанс не состоится</p>
+          <p class="error-subtitle">{{ error }}</p>
+          <RouterLink to="/" class="error-retry">Вернуться к афише</RouterLink>
         </div>
+        <template v-else-if="movieDetail">
+          <div class="detail-content">
+            <div class="detail-poster">
+              <img
+                v-if="movieDetail.poster_path"
+                :src="`https://image.tmdb.org/t/p/w500${movieDetail.poster_path}`"
+                :alt="movieDetail.title"
+              />
+            </div>
+            <div class="detail-info">
+              <h1>{{ movieDetail.title }}</h1>
+              <p v-if="movieDetail.tagline" class="tagline">{{ movieDetail.tagline }}</p>
 
-        <p v-if="movieDetail.overview" class="overview">{{ movieDetail.overview }}</p>
-        <p v-else class="overview overview--empty">Описание пока недоступно</p>
+              <div class="detail-meta">
+                <span class="detail-date">{{ movieDetail.release_date }}</span>
+                <span v-if="movieDetail.runtime" class="detail-runtime"
+                  >{{ movieDetail.runtime }} мин</span
+                >
+                <span class="detail-rating">{{ movieDetail.vote_average.toFixed(1) }}</span>
+              </div>
+
+              <div v-if="movieDetail.genres.length" class="detail-genres">
+                <RouterLink
+                  v-for="genre in movieDetail.genres"
+                  :key="genre.id"
+                  :to="{ path: '/', query: { genre: genre.id } }"
+                  class="genre-badge"
+                >
+                  {{ genre.name }}
+                </RouterLink>
+              </div>
+
+              <p v-if="movieDetail.overview" class="overview">{{ movieDetail.overview }}</p>
+              <p v-else class="overview overview--empty">Описание пока недоступно</p>
+            </div>
+          </div>
+
+          <div v-if="similarMovies.length" class="similar-section">
+            <h2 class="similar-title">Похожие фильмы</h2>
+            <div class="similar-grid">
+              <RouterLink
+                v-for="movie in similarMovies.slice(0, 12)"
+                :key="movie.id"
+                :to="{ name: 'movie-detail', params: { id: movie.id } }"
+                class="similar-card"
+              >
+                <div class="similar-card-poster">
+                  <img
+                    v-if="movie.poster_path"
+                    :src="`https://image.tmdb.org/t/p/w185${movie.poster_path}`"
+                    :alt="movie.title"
+                    loading="lazy"
+                  />
+                </div>
+                <span class="similar-card-title">{{ movie.title }}</span>
+              </RouterLink>
+            </div>
+          </div>
+        </template>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
+.page-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.backdrop {
+  flex-shrink: 0;
+  width: 100%;
+  height: 400px;
+  background-size: cover;
+  background-position: center;
+}
+
+.scroll-area {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-accent) var(--color-surface);
+}
+
+.scroll-area::-webkit-scrollbar {
+  width: 10px;
+}
+
+.scroll-area::-webkit-scrollbar-track {
+  background: var(--color-surface);
+}
+
+.scroll-area::-webkit-scrollbar-thumb {
+  background-color: var(--color-accent);
+  border-radius: 6px;
+  border: 2px solid var(--color-surface);
+}
+
 .detail-page {
   max-width: 1000px;
   margin: 0 auto;
@@ -269,5 +342,78 @@ onUnmounted(() => {
 .genre-badge:hover {
   border-color: var(--color-accent);
   color: var(--color-text);
+}
+
+.similar-section {
+  margin-top: 48px;
+}
+
+.similar-title {
+  margin: 0 0 16px;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-text);
+}
+
+.similar-grid {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-accent) var(--color-surface);
+}
+
+.similar-grid::-webkit-scrollbar {
+  height: 8px;
+}
+
+.similar-grid::-webkit-scrollbar-track {
+  background: var(--color-surface);
+}
+
+.similar-grid::-webkit-scrollbar-thumb {
+  background-color: var(--color-accent);
+  border-radius: 6px;
+}
+
+.similar-card {
+  flex: 0 0 140px;
+  color: inherit;
+  text-decoration: none;
+  display: block;
+}
+
+.similar-card-poster {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  background: var(--color-surface);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.similar-card-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.similar-card:hover img {
+  transform: scale(1.04);
+}
+
+.similar-card-title {
+  display: block;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

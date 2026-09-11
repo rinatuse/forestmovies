@@ -31,6 +31,7 @@ const MovieDetailSchema = z.object({
   title: z.string(),
   overview: z.string(),
   poster_path: z.string().nullable(),
+  backdrop_path: z.string().nullable(),
   release_date: z.string(),
   vote_average: z.number(),
   runtime: z.number().nullable(),
@@ -55,6 +56,48 @@ export const useMoviesStore = defineStore('movies', () => {
   const hasMore = computed(() => currentPage.value < totalPages.value)
   const genres = ref<Genre[]>([])
   const currentGenreId = ref<number | null>(null)
+  const similarMovies = ref<Movie[]>([])
+  const similarLoading = ref(false)
+
+  let similarAbortController: AbortController | null = null
+
+  async function fetchSimilarMovies(id: string) {
+    similarAbortController?.abort()
+    const controller = new AbortController()
+    similarAbortController = controller
+
+    similarLoading.value = true
+    similarMovies.value = []
+
+    try {
+      const response = await fetch(
+        `${BASE_URL}/movie/${id}/similar?api_key=${API_KEY}&language=${userLanguage}`,
+        { signal: controller.signal },
+      )
+
+      if (!response.ok) {
+        throw new Error(`TMDB ответил с ошибкой: ${response.status}`)
+      }
+
+      const rawData = await response.json()
+      const result = TMDBResponseSchema.safeParse(rawData)
+
+      if (!result.success) {
+        throw new Error('TMDB прислал данные неожиданной структуры')
+      }
+
+      similarMovies.value = result.data.results
+    } catch (e) {
+      if (controller.signal.aborted) {
+        return
+      }
+      similarMovies.value = []
+    } finally {
+      if (!controller.signal.aborted) {
+        similarLoading.value = false
+      }
+    }
+  }
 
   let detailAbortController: AbortController | null = null
 
@@ -229,9 +272,12 @@ export const useMoviesStore = defineStore('movies', () => {
     movieDetail,
     hasMore,
     genres,
+    similarMovies,
+    similarLoading,
     fetchMovieDetail,
     fetchMovies,
     fetchNextPage,
     fetchGenres,
+    fetchSimilarMovies,
   }
 })
