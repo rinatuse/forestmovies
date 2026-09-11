@@ -413,4 +413,27 @@ onMounted(() => {
     transform: rotate(360deg);
   }
 }
+
+@media (max-width: 640px) {
+  .genre-chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-accent) var(--color-surface);
+  }
+
+  .genre-chips::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .genre-chips::-webkit-scrollbar-thumb {
+    background-color: var(--color-accent);
+    border-radius: 6px;
+  }
+
+  .genre-chip {
+    flex-shrink: 0;
+  }
+}
 </style>

@@ -427,4 +427,10 @@ onUnmounted(() => {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+@media (max-width: 640px) {
+  .backdrop {
+    display: none;
+  }
+}
 </style>
